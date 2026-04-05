@@ -1,0 +1,233 @@
+import type { Template, TemplateField } from '../types';
+
+const SEVERITY_FIELD: TemplateField = {
+  id: 'severity',
+  label: 'Severity',
+  type: 'select',
+  required: false,
+  options: [
+    { label: 'Critical', value: 'critical' },
+    { label: 'High', value: 'high' },
+    { label: 'Medium', value: 'medium' },
+    { label: 'Low', value: 'low' },
+  ],
+};
+
+const BASE_FIELDS: TemplateField[] = [
+  {
+    id: 'title',
+    label: 'Bug Title',
+    type: 'text',
+    placeholder: 'Short, descriptive title',
+    required: true,
+  },
+  SEVERITY_FIELD,
+  {
+    id: 'description',
+    label: 'Description',
+    type: 'textarea',
+    placeholder: 'Describe the bug in detail...',
+    required: true,
+  },
+  {
+    id: 'steps_to_reproduce',
+    label: 'Steps to Reproduce',
+    type: 'textarea',
+    placeholder: '1. Go to...\n2. Click on...\n3. Observe...',
+    required: true,
+  },
+  {
+    id: 'expected_result',
+    label: 'Expected Result',
+    type: 'textarea',
+    placeholder: 'What should happen?',
+    required: true,
+  },
+  {
+    id: 'actual_result',
+    label: 'Actual Result',
+    type: 'textarea',
+    placeholder: 'What actually happened?',
+    required: true,
+  },
+  {
+    id: 'environment',
+    label: 'Environment',
+    type: 'text',
+    placeholder: 'e.g., Chrome 120, macOS 14, v2.3.1',
+    required: false,
+  },
+  {
+    id: 'logs',
+    label: 'Logs / Attachments',
+    type: 'file',
+    placeholder: 'Attach images, videos, or log files...',
+    required: false,
+  },
+];
+
+export const BUILTIN_TEMPLATES: Template[] = [
+  {
+    id: 'general-bug',
+    name: 'General Bug',
+    description: 'Standard bug report for most issues',
+    source: 'builtin',
+    fields: BASE_FIELDS,
+  },
+  {
+    id: 'ui-visual',
+    name: 'UI / Visual Issue',
+    description: 'Visual bugs, layout problems, accessibility issues',
+    source: 'builtin',
+    fields: [
+      ...BASE_FIELDS,
+      {
+        id: 'browser_os',
+        label: 'Browser & OS',
+        type: 'text',
+        placeholder: 'e.g., Chrome 120 on Windows 11',
+        required: true,
+      },
+      {
+        id: 'screen_resolution',
+        label: 'Screen Resolution',
+        type: 'text',
+        placeholder: 'e.g., 1920x1080',
+        required: false,
+      },
+      {
+        id: 'accessibility_impact',
+        label: 'Accessibility Impact',
+        type: 'select',
+        required: false,
+        options: [
+          { label: 'None', value: 'none' },
+          { label: 'Low', value: 'low' },
+          { label: 'Medium', value: 'medium' },
+          { label: 'High', value: 'high' },
+        ],
+      },
+    ],
+  },
+  {
+    id: 'crash-fatal',
+    name: 'Crash / Fatal Error',
+    description: 'Application crashes, unhandled exceptions, fatal errors',
+    source: 'builtin',
+    fields: [
+      ...BASE_FIELDS,
+      {
+        id: 'stack_trace',
+        label: 'Stack Trace',
+        type: 'textarea',
+        placeholder: 'Paste the full stack trace here...',
+        required: true,
+      },
+      {
+        id: 'frequency',
+        label: 'Frequency',
+        type: 'select',
+        required: true,
+        options: [
+          { label: 'Always (100%)', value: 'always' },
+          { label: 'Sometimes (25-75%)', value: 'sometimes' },
+          { label: 'Rarely (<25%)', value: 'rarely' },
+        ],
+      },
+      {
+        id: 'crash_time',
+        label: 'Crash Time / Timestamp',
+        type: 'text',
+        placeholder: 'e.g., 2024-01-15 14:32:00 UTC',
+        required: false,
+      },
+    ],
+  },
+  {
+    id: 'performance',
+    name: 'Performance Issue',
+    description: 'Slow loading, high memory usage, freezes',
+    source: 'builtin',
+    fields: [
+      ...BASE_FIELDS,
+      {
+        id: 'response_time_observed',
+        label: 'Response Time Observed',
+        type: 'text',
+        placeholder: 'e.g., 8 seconds',
+        required: false,
+      },
+      {
+        id: 'expected_response_time',
+        label: 'Expected Response Time',
+        type: 'text',
+        placeholder: 'e.g., under 1 second',
+        required: false,
+      },
+      {
+        id: 'load_conditions',
+        label: 'Load Conditions',
+        type: 'textarea',
+        placeholder: 'Describe the load at the time (users, data size, etc.)',
+        required: false,
+      },
+      {
+        id: 'profiler_output',
+        label: 'Profiler Output',
+        type: 'textarea',
+        placeholder: 'Paste profiler data or performance metrics...',
+        required: false,
+      },
+    ],
+  },
+  {
+    id: 'api-backend',
+    name: 'API / Backend Issue',
+    description: 'API errors, backend failures, data issues',
+    source: 'builtin',
+    fields: [
+      ...BASE_FIELDS,
+      {
+        id: 'endpoint',
+        label: 'Endpoint',
+        type: 'text',
+        placeholder: 'e.g., POST /api/v1/users',
+        required: true,
+      },
+      {
+        id: 'http_method',
+        label: 'HTTP Method',
+        type: 'select',
+        required: true,
+        options: [
+          { label: 'GET', value: 'GET' },
+          { label: 'POST', value: 'POST' },
+          { label: 'PUT', value: 'PUT' },
+          { label: 'PATCH', value: 'PATCH' },
+          { label: 'DELETE', value: 'DELETE' },
+        ],
+      },
+      {
+        id: 'status_code',
+        label: 'Status Code Received',
+        type: 'text',
+        placeholder: 'e.g., 500 Internal Server Error',
+        required: false,
+      },
+      {
+        id: 'request_payload',
+        label: 'Request Payload',
+        type: 'textarea',
+        placeholder: 'Paste the request body (JSON, form data, etc.)',
+        required: false,
+      },
+      {
+        id: 'response_body',
+        label: 'Response Body',
+        type: 'textarea',
+        placeholder: 'Paste the response body or error message...',
+        required: false,
+      },
+    ],
+  },
+];
