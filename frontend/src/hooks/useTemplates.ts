@@ -1,88 +1,96 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { BUILTIN_TEMPLATES } from '../constants/builtinTemplates';
-import type { Template, CustomTemplatesStore, TemplateField } from '../types';
-
-const STORAGE_KEY = 'bugscribe_custom_templates';
-
-function loadCustomTemplates(): Template[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const store: CustomTemplatesStore = JSON.parse(raw);
-    if (store.version !== 1) return [];
-    return store.templates;
-  } catch {
-    return [];
-  }
-}
-
-function saveCustomTemplates(templates: Template[]): void {
-  const store: CustomTemplatesStore = { version: 1, templates };
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
-}
+import type { Template, TemplateField } from '../types';
+import { supabase } from '../lib/supabase';
 
 export function useTemplates() {
-  const [customTemplates, setCustomTemplates] = useState<Template[]>(loadCustomTemplates);
+  const [customTemplates, setCustomTemplates] = useState<Template[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>(BUILTIN_TEMPLATES[0].id);
 
-  const allTemplates: Template[] = [
-    ...BUILTIN_TEMPLATES,
-    ...[...customTemplates].sort((a, b) =>
-      (a.createdAt ?? '') < (b.createdAt ?? '') ? -1 : 1
-    ),
-  ];
+  useEffect(() => {
+    supabase
+      .from('templates')
+      .select('*')
+      .order('created_at', { ascending: true })
+      .then(({ data }) => {
+        if (data) {
+          setCustomTemplates(
+            data.map((row) => ({
+              id: row.id,
+              name: row.name,
+              description: row.description,
+              source: 'custom' as const,
+              fields: row.fields,
+              createdAt: row.created_at,
+            }))
+          );
+        }
+      });
+  }, []);
 
-  const selectedTemplate = allTemplates.find((t) => t.id === selectedTemplateId) ?? BUILTIN_TEMPLATES[0];
+  const allTemplates: Template[] = [...BUILTIN_TEMPLATES, ...customTemplates];
+
+  const selectedTemplate =
+    allTemplates.find((t) => t.id === selectedTemplateId) ?? BUILTIN_TEMPLATES[0];
 
   const setSelectedTemplate = useCallback((id: string) => {
     setSelectedTemplateId(id);
   }, []);
 
   const addCustomTemplate = useCallback(
-    (draft: { name: string; description: string; fields: TemplateField[] }) => {
+    async (draft: { name: string; description: string; fields: TemplateField[] }) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const { data, error } = await supabase
+        .from('templates')
+        .insert({ user_id: session.user.id, name: draft.name, description: draft.description, fields: draft.fields })
+        .select()
+        .single();
+
+      if (error || !data) return;
+
       const newTemplate: Template = {
-        id: `custom-${Date.now().toString(36)}`,
-        name: draft.name,
-        description: draft.description,
+        id: data.id,
+        name: data.name,
+        description: data.description,
         source: 'custom',
-        fields: draft.fields,
-        createdAt: new Date().toISOString(),
+        fields: data.fields,
+        createdAt: data.created_at,
       };
-      setCustomTemplates((prev) => {
-        const updated = [...prev, newTemplate];
-        saveCustomTemplates(updated);
-        return updated;
-      });
+      setCustomTemplates((prev) => [...prev, newTemplate]);
       setSelectedTemplateId(newTemplate.id);
     },
     []
   );
 
   const updateCustomTemplate = useCallback(
-    (id: string, draft: { name: string; description: string; fields: TemplateField[] }) => {
-      setCustomTemplates((prev) => {
-        const updated = prev.map((t) =>
+    async (id: string, draft: { name: string; description: string; fields: TemplateField[] }) => {
+      const { error } = await supabase
+        .from('templates')
+        .update({ name: draft.name, description: draft.description, fields: draft.fields })
+        .eq('id', id);
+
+      if (error) return;
+
+      setCustomTemplates((prev) =>
+        prev.map((t) =>
           t.id === id
             ? { ...t, name: draft.name, description: draft.description, fields: draft.fields }
             : t
-        );
-        saveCustomTemplates(updated);
-        return updated;
-      });
+        )
+      );
     },
     []
   );
 
-  const deleteCustomTemplate = useCallback((id: string) => {
-    setCustomTemplates((prev) => {
-      const updated = prev.filter((t) => t.id !== id);
-      saveCustomTemplates(updated);
-      return updated;
-    });
-    setSelectedTemplateId((current) => {
-      if (current === id) return BUILTIN_TEMPLATES[0].id;
-      return current;
-    });
+  const deleteCustomTemplate = useCallback(async (id: string) => {
+    const { error } = await supabase.from('templates').delete().eq('id', id);
+
+    if (error) return;
+
+    setCustomTemplates((prev) => prev.filter((t) => t.id !== id));
+    setSelectedTemplateId((current) => (current === id ? BUILTIN_TEMPLATES[0].id : current));
   }, []);
 
   return {

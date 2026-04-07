@@ -13,40 +13,11 @@ Strict constraints:
 - Do NOT upgrade or downgrade the severity — use the provided value verbatim.
 - When information is missing, use: "Not specified", "Unknown", or "Requires investigation." Do not fill in plausible-sounding values.
 - For logs or stack traces, reproduce them exactly in fenced code blocks. Do not annotate or interpret them.
-- Do NOT include an "Additional Notes" section.
+- Output ONLY the sections listed in the "Required output format" block of the user message. Do not add any other sections.
 
 Formatting:
 - Use Markdown with ## headers and numbered lists for steps.
-- Be concise. Do not pad sections with assumptions.
-
-Output format — follow this structure exactly, omitting any section for which no information was provided:
-
-# [Bug Title — use the user's title verbatim if given, otherwise write a neutral descriptive title]
-
-## Summary
-[1–2 sentences strictly describing the observed issue as reported. No root cause, no assumptions.]
-
-## Severity
-[severity level as provided, or "Not specified"]
-
-## Environment
-[environment details as provided, or "Not specified"]
-
-## Steps to Reproduce
-[Only include steps that were explicitly stated or are unambiguously implied. If none provided, write "Not provided."]
-
-## Expected Behavior
-[Exactly as stated by the user. If not stated, write "Not specified."]
-
-## Actual Behavior
-[Exactly as described by the user.]
-
-## Logs / Stack Trace
-\`\`\`
-[Reproduce verbatim. Omit this section entirely if no logs were provided.]
-\`\`\`
-
-Do not add any section beyond the ones listed above.`;
+- Be concise. Do not pad sections with assumptions.`;
 
 export interface PromptParts {
   system: string;
@@ -71,13 +42,39 @@ export function buildPrompt(req: AnalyzeRequest): PromptParts {
   }
 
   if (req.mode === 'freetext') {
+    const fullText = req.freeText?.trim() ?? '';
+    const logSplit = fullText.indexOf('[Attached log files:');
+    const hasLogs = logSplit !== -1;
+    const writtenPart = hasLogs ? fullText.slice(0, logSplit).trim() : fullText;
+    const logPart = hasLogs ? fullText.slice(logSplit).trim() : '';
+
     lines.push(
-      '## Free-Text Description',
+      '## User Description',
       '',
-      'The user has described the following bug in free-form text. Please extract and structure all relevant information:',
+      'The user has described the following bug. Extract and structure all relevant information. This is the primary input:',
       '',
-      req.freeText?.trim() ?? ''
+      writtenPart
     );
+
+    if (hasLogs) {
+      lines.push(
+        '',
+        '## Attached Log Files',
+        '',
+        'The following log content was attached as supporting context. Use it to supplement and validate the description above, but do not treat it as the primary source. Only extract facts that directly support or clarify what the user described:',
+        '',
+        logPart
+      );
+    }
+  }
+
+  // Build dynamic output format from template fields
+  lines.push('', '---', '', 'Required output format — output ONLY these sections, in this exact order. Do not add any other sections:', '');
+  lines.push('# [Bug Title — use the user\'s title verbatim if given, otherwise write a neutral descriptive title]', '');
+  for (const field of req.fields) {
+    if (field.type === 'file') continue;
+    lines.push(`## ${field.label}`);
+    lines.push('[content based on the input above, or "Not specified" if not provided]', '');
   }
 
   return {

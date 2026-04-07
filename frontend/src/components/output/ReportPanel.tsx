@@ -48,21 +48,33 @@ export function ReportPanel({
   isLoading,
   error,
   onSave,
+  onSaveReport,
   missingFields,
 }: {
   report: string;
   isLoading: boolean;
   error: string | null;
   onSave: (updated: string) => void;
+  onSaveReport?: () => Promise<void>;
   missingFields?: string[];
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedReport, setEditedReport] = useState('');
+  const [isSaved, setIsSaved] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Translation state
   const [translatedReport, setTranslatedReport] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
   const [showHebrew, setShowHebrew] = useState(false);
+
+  async function handleSaveReport() {
+    if (!onSaveReport) return;
+    setIsSaving(true);
+    await onSaveReport();
+    setIsSaving(false);
+    setIsSaved(true);
+  }
 
   // When a new report streams in, exit edit mode and reset translation
   useEffect(() => {
@@ -70,6 +82,7 @@ export function ReportPanel({
       setIsEditing(false);
       setTranslatedReport('');
       setShowHebrew(false);
+      setIsSaved(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [report]);
@@ -221,6 +234,18 @@ export function ReportPanel({
                   </svg>
                   {showHebrew ? 'English' : 'עברית'}
                 </button>
+                {onSaveReport && (
+                  <button
+                    onClick={handleSaveReport}
+                    disabled={isSaving || isSaved}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  >
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                    </svg>
+                    {isSaved ? 'Saved' : isSaving ? 'Saving…' : 'Save'}
+                  </button>
+                )}
                 <CopyButton text={plainTextReport} />
               </>
             )}

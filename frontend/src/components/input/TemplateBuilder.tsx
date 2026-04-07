@@ -69,17 +69,26 @@ export function TemplateBuilder({
     if (fieldDrafts.length === 0) { setError('Add at least one field.'); return; }
     if (fieldDrafts.some((f) => !f.label.trim())) { setError('All fields must have a label.'); return; }
 
-    const fields: TemplateField[] = fieldDrafts.map((f) => ({
-      id: f.label.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, ''),
-      label: f.label.trim(),
-      type: f.type,
-      required: f.required,
-      options:
-        f.type === 'select' || f.type === 'multi-select'
-          ? f.options.split(',').map((o) => o.trim()).filter(Boolean)
-              .map((o) => ({ label: o, value: o.toLowerCase().replace(/\s+/g, '_') }))
-          : undefined,
-    }));
+    const usedIds = new Set<string>();
+    const fields: TemplateField[] = fieldDrafts.map((f, i) => {
+      let base = f.label.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+      if (!base) base = `field_${i}`;
+      let id = base;
+      let suffix = 2;
+      while (usedIds.has(id)) { id = `${base}_${suffix++}`; }
+      usedIds.add(id);
+      return {
+        id,
+        label: f.label.trim(),
+        type: f.type,
+        required: f.required,
+        options:
+          f.type === 'select' || f.type === 'multi-select'
+            ? f.options.split(',').map((o) => o.trim()).filter(Boolean)
+                .map((o) => ({ label: o, value: o.toLowerCase().replace(/\s+/g, '_') }))
+            : undefined,
+      };
+    });
 
     onSave({ name: name.trim(), description: description.trim(), fields });
   }

@@ -21,23 +21,26 @@ export function FreeTextArea({
   const [attachedNames, setAttachedNames] = useState<string[]>([]);
 
   function handleFiles(files: File[]) {
-    if (files.length === 0) return;
-    const names = files.map((f) => f.name);
+    const logs = files.filter((f) => /\.log$/i.test(f.name));
+    if (logs.length === 0) return;
+    const names = logs.map((f) => f.name);
     setAttachedNames(names);
 
-    // For text-based files, read content; for others, just record names
-    const textFile = files.find((f) => /\.(log|txt|json|xml|csv)$/i.test(f.name));
-    if (textFile) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const content = ev.target?.result as string;
-        const extra = `[Attached files: ${names.join(', ')}]\n\n${content.slice(0, 4000)}`;
-        onAttachmentsChange(extra);
-      };
-      reader.readAsText(textFile);
-    } else {
-      onAttachmentsChange(`[Attached files: ${names.join(', ')}]`);
-    }
+    // Read all log files and concatenate their contents
+    const readers = logs.map(
+      (file) =>
+        new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (ev) => resolve(ev.target?.result as string);
+          reader.readAsText(file);
+        })
+    );
+    Promise.all(readers).then((contents) => {
+      const sections = contents.map((content, i) =>
+        `--- Log File: ${names[i]} ---\n${content.slice(0, 4000)}`
+      );
+      onAttachmentsChange(`[Attached log files: ${names.join(', ')}]\n\n${sections.join('\n\n')}`);
+    });
   }
 
   function removeAttachments() {
@@ -63,7 +66,7 @@ export function FreeTextArea({
       {/* File attachment */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1.5">
-          Attachments <span className="text-gray-400 font-normal">(optional)</span>
+          Log Files <span className="text-gray-400 font-normal">(optional — used to support analysis)</span>
         </label>
         {attachedNames.length > 0 ? (
           <div className="flex items-center gap-3 px-3 py-2.5 border border-indigo-200 bg-indigo-50 rounded-lg">
@@ -86,14 +89,14 @@ export function FreeTextArea({
             <input
               type="file"
               multiple
-              accept="image/*,video/*,.log,.txt,.json,.xml,.csv,.pdf"
+              accept=".log"
               className="hidden"
               onChange={(e) => handleFiles(Array.from(e.target.files ?? []))}
             />
             <svg className="h-4 w-4 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
             </svg>
-            <span className="text-xs text-gray-500">Attach images, videos, logs, or text files</span>
+            <span className="text-xs text-gray-500">Attach .log files to support the report</span>
           </label>
         )}
       </div>

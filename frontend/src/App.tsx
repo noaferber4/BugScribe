@@ -6,6 +6,7 @@ import { TemplateBuilder } from './components/input/TemplateBuilder';
 import { ReportPanel } from './components/output/ReportPanel';
 import { useTemplates } from './hooks/useTemplates';
 import { useAnalyze } from './hooks/useAnalyze';
+import { useReports } from './hooks/useReports';
 import type { InputMode, FormValues, Template } from './types';
 
 export type AnalyzeBlockedReason = 'files-only' | 'no-changes' | null;
@@ -19,12 +20,14 @@ export default function App() {
   const { allTemplates, selectedTemplate, setSelectedTemplate, addCustomTemplate, updateCustomTemplate, deleteCustomTemplate } =
     useTemplates();
   const { report, isLoading, error, analyze, updateReport } = useAnalyze();
+  const { savedReports, saveReport, deleteReport } = useReports();
 
   const [mode, setMode] = useState<InputMode>('structured');
   const [formValues, setFormValues] = useState<FormValues>({});
   const [freeText, setFreeText] = useState('');
   const [freeTextAttachments, setFreeTextAttachments] = useState('');
   const [lastAnalyzedKey, setLastAnalyzedKey] = useState<string | null>(null);
+  const [lastAnalyzedMode, setLastAnalyzedMode] = useState<InputMode>('structured');
   const [templateView, setTemplateView] = useState<TemplateView>(null);
 
   const currentInputKey = useMemo(
@@ -87,6 +90,7 @@ export default function App() {
   const handleAnalyze = useCallback(() => {
     if (!canAnalyze) return;
     setLastAnalyzedKey(currentInputKey);
+    setLastAnalyzedMode(mode);
 
     const combinedFreeText = freeTextAttachments
       ? `${freeText}\n\n${freeTextAttachments}`.trim()
@@ -103,7 +107,7 @@ export default function App() {
   }, [canAnalyze, currentInputKey, analyze, selectedTemplate, mode, formValues, freeText, freeTextAttachments]);
 
   const missingFields = useMemo(() => {
-    if (mode !== 'structured' || !report) return [];
+    if (lastAnalyzedMode !== 'structured' || !report) return [];
     return selectedTemplate.fields
       .filter((f) => f.type !== 'file')
       .filter((f) => {
@@ -111,7 +115,7 @@ export default function App() {
         return !val || (typeof val === 'string' && !val.trim());
       })
       .map((f) => f.label);
-  }, [mode, report, selectedTemplate.fields, formValues]);
+  }, [lastAnalyzedMode, report, selectedTemplate.fields, formValues]);
 
   const handleTemplateSave = useCallback(
     (draft: { name: string; description: string; fields: import('./types').TemplateField[] }) => {
@@ -159,6 +163,9 @@ export default function App() {
           onDelete={deleteCustomTemplate}
           onCreateTemplate={() => setTemplateView({ mode: 'create' })}
           onEditTemplate={(t) => setTemplateView({ mode: 'edit', template: t })}
+          savedReports={savedReports}
+          onLoadReport={(r) => { updateReport(r.content); setTemplateView(null); }}
+          onDeleteReport={deleteReport}
         />
       }
       main={mainContent}
@@ -168,6 +175,7 @@ export default function App() {
           isLoading={isLoading}
           error={error}
           onSave={updateReport}
+          onSaveReport={report ? async () => { await saveReport(report, selectedTemplate.name); } : undefined}
           missingFields={missingFields}
         />
       }
