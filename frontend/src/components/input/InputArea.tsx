@@ -38,11 +38,11 @@ export function InputArea({
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="border-b border-gray-100 px-6 py-4">
+      <div className="border-b border-white/10 px-6 py-4">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-base font-semibold text-gray-900">{template.name}</h1>
-            <p className="text-xs text-gray-400 mt-0.5">{template.description}</p>
+            <h1 className="text-base font-semibold text-white">{template.name}</h1>
+            <p className="text-xs text-white/40 mt-0.5">{template.description}</p>
           </div>
         </div>
 
@@ -54,8 +54,8 @@ export function InputArea({
               onClick={() => onModeChange(tab.id)}
               className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
                 mode === tab.id
-                  ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
-                  : 'text-gray-500 hover:text-gray-700'
+                  ? 'bg-white/[0.08] text-white border border-white/10'
+                  : 'text-white/40 hover:text-white/60'
               }`}
             >
               {tab.label}

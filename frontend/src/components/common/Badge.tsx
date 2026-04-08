@@ -1,12 +1,12 @@
 import type { ReactNode } from 'react';
 
 const variants = {
-  indigo: 'bg-indigo-100 text-indigo-700',
-  gray: 'bg-gray-100 text-gray-600',
-  critical: 'bg-red-100 text-red-700',
-  high: 'bg-orange-100 text-orange-700',
-  medium: 'bg-yellow-100 text-yellow-700',
-  low: 'bg-green-100 text-green-700',
+  indigo: 'bg-cyan-500/10 text-cyan-400',
+  gray: 'bg-white/[0.07] text-white/40',
+  critical: 'bg-red-500/15 text-red-400',
+  high: 'bg-orange-500/15 text-orange-400',
+  medium: 'bg-yellow-500/15 text-yellow-400',
+  low: 'bg-green-500/15 text-green-400',
 };
 
 export function Badge({

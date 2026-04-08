@@ -4,6 +4,8 @@ import { Sidebar } from './components/layout/Sidebar';
 import { InputArea } from './components/input/InputArea';
 import { TemplateBuilder } from './components/input/TemplateBuilder';
 import { ReportPanel } from './components/output/ReportPanel';
+import { TemplateGrid } from './components/home/TemplateGrid';
+import { SavedBugsView } from './components/home/SavedBugsView';
 import { useTemplates } from './hooks/useTemplates';
 import { useAnalyze } from './hooks/useAnalyze';
 import { useReports } from './hooks/useReports';
@@ -11,10 +13,11 @@ import type { InputMode, FormValues, Template } from './types';
 
 export type AnalyzeBlockedReason = 'files-only' | 'no-changes' | null;
 
-type TemplateView =
-  | { mode: 'create' }
-  | { mode: 'edit'; template: Template }
-  | null;
+type CenterView =
+  | { type: 'home' }
+  | { type: 'form' }
+  | { type: 'saved-bugs' }
+  | { type: 'template-builder'; mode: 'create' | 'edit'; template?: Template };
 
 export default function App() {
   const { allTemplates, selectedTemplate, setSelectedTemplate, addCustomTemplate, updateCustomTemplate, deleteCustomTemplate } =
@@ -22,13 +25,13 @@ export default function App() {
   const { report, isLoading, error, analyze, updateReport } = useAnalyze();
   const { savedReports, saveReport, deleteReport } = useReports();
 
+  const [centerView, setCenterView] = useState<CenterView>({ type: 'home' });
   const [mode, setMode] = useState<InputMode>('structured');
   const [formValues, setFormValues] = useState<FormValues>({});
   const [freeText, setFreeText] = useState('');
   const [freeTextAttachments, setFreeTextAttachments] = useState('');
   const [lastAnalyzedKey, setLastAnalyzedKey] = useState<string | null>(null);
-  const [lastAnalyzedMode, setLastAnalyzedMode] = useState<InputMode>('structured');
-  const [templateView, setTemplateView] = useState<TemplateView>(null);
+
 
   const currentInputKey = useMemo(
     () => JSON.stringify({ templateId: selectedTemplate.id, mode, formValues, freeText, freeTextAttachments }),
@@ -73,7 +76,7 @@ export default function App() {
       setFreeText('');
       setFreeTextAttachments('');
       setLastAnalyzedKey(null);
-      setTemplateView(null);
+      setCenterView({ type: 'form' });
     },
     [setSelectedTemplate]
   );
@@ -90,7 +93,6 @@ export default function App() {
   const handleAnalyze = useCallback(() => {
     if (!canAnalyze) return;
     setLastAnalyzedKey(currentInputKey);
-    setLastAnalyzedMode(mode);
 
     const combinedFreeText = freeTextAttachments
       ? `${freeText}\n\n${freeTextAttachments}`.trim()
@@ -106,78 +108,107 @@ export default function App() {
     });
   }, [canAnalyze, currentInputKey, analyze, selectedTemplate, mode, formValues, freeText, freeTextAttachments]);
 
-  const missingFields = useMemo(() => {
-    if (lastAnalyzedMode !== 'structured' || !report) return [];
-    return selectedTemplate.fields
-      .filter((f) => f.type !== 'file')
-      .filter((f) => {
-        const val = formValues[f.id];
-        return !val || (typeof val === 'string' && !val.trim());
-      })
-      .map((f) => f.label);
-  }, [lastAnalyzedMode, report, selectedTemplate.fields, formValues]);
-
   const handleTemplateSave = useCallback(
     (draft: { name: string; description: string; fields: import('./types').TemplateField[] }) => {
-      if (templateView?.mode === 'edit') {
-        updateCustomTemplate(templateView.template.id, draft);
+      if (centerView.type === 'template-builder' && centerView.mode === 'edit' && centerView.template) {
+        updateCustomTemplate(centerView.template.id, draft);
       } else {
         addCustomTemplate(draft);
       }
-      setTemplateView(null);
+      setCenterView({ type: 'home' });
     },
-    [templateView, addCustomTemplate, updateCustomTemplate]
+    [centerView, addCustomTemplate, updateCustomTemplate]
   );
 
-  const mainContent = templateView !== null ? (
-    <TemplateBuilder
-      editingTemplate={templateView.mode === 'edit' ? templateView.template : undefined}
-      onSave={handleTemplateSave}
-      onCancel={() => setTemplateView(null)}
-    />
-  ) : (
-    <InputArea
-      template={selectedTemplate}
-      mode={mode}
-      formValues={formValues}
-      freeText={freeText}
-      isLoading={isLoading}
-      canAnalyze={canAnalyze}
-      analyzeBlockedReason={analyzeBlockedReason}
-      onModeChange={handleModeChange}
-      onFormChange={handleFormChange}
-      onFreeTextChange={setFreeText}
-      onFreeTextAttachmentsChange={setFreeTextAttachments}
-      onAnalyze={handleAnalyze}
-    />
+  const handleLoadReport = useCallback(
+    (r: { content: string }) => {
+      updateReport(r.content);
+      setCenterView({ type: 'form' });
+    },
+    [updateReport]
   );
+
+  // Derive the editing template for TemplateBuilder
+  const editingTemplate =
+    centerView.type === 'template-builder' && centerView.mode === 'edit'
+      ? centerView.template
+      : undefined;
+
+  let mainContent: React.ReactNode;
+  switch (centerView.type) {
+    case 'home':
+      mainContent = (
+        <TemplateGrid
+          allTemplates={allTemplates}
+          onSelectTemplate={handleSelectTemplate}
+          onEditTemplate={(t) => setCenterView({ type: 'template-builder', mode: 'edit', template: t })}
+          onDeleteTemplate={deleteCustomTemplate}
+          onCreateTemplate={() => setCenterView({ type: 'template-builder', mode: 'create' })}
+          savedReports={savedReports}
+          onLoadReport={handleLoadReport}
+          onViewAllReports={() => setCenterView({ type: 'saved-bugs' })}
+        />
+      );
+      break;
+    case 'form':
+      mainContent = (
+        <InputArea
+          template={selectedTemplate}
+          mode={mode}
+          formValues={formValues}
+          freeText={freeText}
+          isLoading={isLoading}
+          canAnalyze={canAnalyze}
+          analyzeBlockedReason={analyzeBlockedReason}
+          onModeChange={handleModeChange}
+          onFormChange={handleFormChange}
+          onFreeTextChange={setFreeText}
+          onFreeTextAttachmentsChange={setFreeTextAttachments}
+          onAnalyze={handleAnalyze}
+        />
+      );
+      break;
+    case 'saved-bugs':
+      mainContent = (
+        <SavedBugsView
+          savedReports={savedReports}
+          onLoadReport={handleLoadReport}
+          onDeleteReport={deleteReport}
+        />
+      );
+      break;
+    case 'template-builder':
+      mainContent = (
+        <TemplateBuilder
+          editingTemplate={editingTemplate}
+          onSave={handleTemplateSave}
+          onCancel={() => setCenterView({ type: 'home' })}
+        />
+      );
+      break;
+  }
 
   return (
     <AppShell
       sidebar={
         <Sidebar
-          allTemplates={allTemplates}
-          selectedTemplateId={selectedTemplate.id}
-          onSelect={handleSelectTemplate}
-          onUpdate={updateCustomTemplate}
-          onDelete={deleteCustomTemplate}
-          onCreateTemplate={() => setTemplateView({ mode: 'create' })}
-          onEditTemplate={(t) => setTemplateView({ mode: 'edit', template: t })}
-          savedReports={savedReports}
-          onLoadReport={(r) => { updateReport(r.content); setTemplateView(null); }}
-          onDeleteReport={deleteReport}
+          centerViewType={centerView.type}
+          onNavHome={() => setCenterView({ type: 'home' })}
+          onNavCreateTemplate={() => setCenterView({ type: 'template-builder', mode: 'create' })}
+          onNavSavedBugs={() => setCenterView({ type: 'saved-bugs' })}
         />
       }
       main={mainContent}
       rightPanel={
-        <ReportPanel
-          report={report}
-          isLoading={isLoading}
-          error={error}
-          onSave={updateReport}
-          onSaveReport={report ? async () => { await saveReport(report, selectedTemplate.name); } : undefined}
-          missingFields={missingFields}
-        />
+        centerView.type === 'form' ? (
+          <ReportPanel
+            report={report}
+            isLoading={isLoading}
+            error={error}
+            onSave={updateReport}
+            onSaveReport={report ? async () => { await saveReport(report, selectedTemplate.name); } : undefined}
+          />
+        ) : undefined
       }
     />
   );

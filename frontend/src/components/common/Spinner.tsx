@@ -1,7 +1,7 @@
 export function Spinner({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
   const s = { sm: 'h-4 w-4', md: 'h-6 w-6', lg: 'h-8 w-8' }[size];
   return (
-    <svg className={`${s} animate-spin text-indigo-600`} fill="none" viewBox="0 0 24 24">
+    <svg className={`${s} animate-spin text-cyan-400`} fill="none" viewBox="0 0 24 24">
       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
       <path
         className="opacity-75"

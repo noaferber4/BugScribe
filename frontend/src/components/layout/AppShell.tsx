@@ -7,22 +7,24 @@ export function AppShell({
 }: {
   sidebar: ReactNode;
   main: ReactNode;
-  rightPanel: ReactNode;
+  rightPanel?: ReactNode;
 }) {
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-[#05080f] overflow-hidden">
       {/* Sidebar */}
-      <div className="h-full">{sidebar}</div>
+      <div className="h-full shrink-0">{sidebar}</div>
 
       {/* Main content */}
-      <div className="flex-1 overflow-hidden border-r border-gray-100">
+      <div className="flex-1 overflow-hidden min-w-0">
         {main}
       </div>
 
-      {/* Right panel */}
-      <div className="w-[420px] shrink-0 bg-white h-full">
-        {rightPanel}
-      </div>
+      {/* Right panel — only rendered when content is provided */}
+      {rightPanel && (
+        <div className="w-[420px] shrink-0 h-full border-l border-white/10">
+          {rightPanel}
+        </div>
+      )}
     </div>
   );
 }

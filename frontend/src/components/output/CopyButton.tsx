@@ -18,8 +18,8 @@ export function CopyButton({ text }: { text: string }) {
       onClick={handleCopy}
       className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
         copied
-          ? 'bg-green-100 text-green-700'
-          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+          ? 'bg-green-500/15 text-green-400 border border-green-500/20'
+          : 'bg-white/[0.06] text-white/60 hover:bg-white/[0.10] hover:text-white border border-white/10'
       }`}
     >
       {copied ? (

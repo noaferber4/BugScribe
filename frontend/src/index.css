@@ -1,8 +1,34 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    /* Dark theme — matches the #05080f landing page palette */
+    --background: 222 47% 5%;
+    --foreground: 0 0% 95%;
+    --card: 222 40% 8%;
+    --card-foreground: 0 0% 95%;
+    --popover: 222 40% 8%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 187 100% 42%;       /* cyan-500 */
+    --primary-foreground: 222 47% 5%;
+    --secondary: 222 25% 14%;
+    --secondary-foreground: 0 0% 90%;
+    --muted: 222 25% 14%;
+    --muted-foreground: 0 0% 50%;
+    --accent: 222 25% 16%;
+    --accent-foreground: 0 0% 95%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 222 20% 18%;
+    --input: 222 20% 18%;
+    --ring: 187 100% 42%;
+    --radius: 0.5rem;
+  }
+}
 
 * {
   box-sizing: border-box;
@@ -20,13 +46,87 @@ body {
   overflow: hidden;
 }
 
-/* Prose overrides for the report panel */
-.prose h1 { font-size: 1.25rem; font-weight: 700; color: #111827; margin-top: 0; margin-bottom: 1rem; }
-.prose h2 { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; margin-top: 1.5rem; margin-bottom: 0.5rem; padding-bottom: 0.25rem; border-bottom: 1px solid #f3f4f6; }
-.prose h3 { font-size: 0.875rem; font-weight: 600; color: #374151; margin-top: 1rem; margin-bottom: 0.25rem; }
-.prose p { font-size: 0.875rem; color: #374151; line-height: 1.6; margin-bottom: 0.5rem; }
-.prose ul, .prose ol { font-size: 0.875rem; color: #374151; padding-left: 1.25rem; margin-bottom: 0.5rem; }
+/* Landing page needs its own scroll context */
+.landing-scroll {
+  height: 100vh;
+  overflow-y: auto;
+}
+
+/* Report section fade-in */
+@keyframes section-fadein {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.report-section-fadein {
+  animation: section-fadein 0.35s ease-out both;
+}
+
+/* Dashboard fade-up animation */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up {
+  animation: fade-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Climbing bug animation */
+@keyframes bug-climb {
+  0% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  20% {
+    transform: translateY(-60px) rotate(-1.5deg);
+  }
+  40% {
+    transform: translateY(-120px) rotate(1.5deg);
+  }
+  60% {
+    transform: translateY(-180px) rotate(-1deg);
+  }
+  80% {
+    transform: translateY(-240px) rotate(1deg);
+  }
+  100% {
+    transform: translateY(-300px) rotate(0deg);
+  }
+}
+
+.bug-climb {
+  animation: bug-climb 18s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+/* Base prose sizing/spacing (layout only, no colors) */
+.prose h1 { font-size: 1.25rem; font-weight: 700; margin-top: 0; margin-bottom: 1rem; }
+.prose h2 { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1.5rem; margin-bottom: 0.5rem; padding-bottom: 0.25rem; border-bottom-width: 1px; border-bottom-style: solid; }
+.prose h3 { font-size: 0.875rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.25rem; }
+.prose p { font-size: 0.875rem; line-height: 1.6; margin-bottom: 0.5rem; }
+.prose ul, .prose ol { font-size: 0.875rem; padding-left: 1.25rem; margin-bottom: 0.5rem; }
 .prose li { margin-bottom: 0.25rem; }
-.prose pre { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 0.875rem; overflow-x: auto; margin: 0.75rem 0; }
-.prose pre code { background: transparent; padding: 0; font-size: 0.8rem; font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace; color: #1e293b; }
-.prose code { background: #f1f5f9; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.8rem; color: #334155; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+.prose pre { border-radius: 0.5rem; padding: 0.875rem; overflow-x: auto; margin: 0.75rem 0; }
+.prose pre code { background: transparent; padding: 0; font-size: 0.8rem; font-family: 'JetBrains Mono', 'Fira Code', ui-monospace, monospace; }
+.prose code { padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.8rem; font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+/* Prose dark theme overrides — must come AFTER base .prose rules to win the cascade */
+.prose-dark h1 { color: rgba(255,255,255,0.9); }
+.prose-dark h2 { color: rgba(255,255,255,0.4); border-bottom-color: rgba(255,255,255,0.07); }
+.prose-dark h3 { color: rgba(255,255,255,0.7); }
+.prose-dark h4, .prose-dark h5, .prose-dark h6 { color: rgba(255,255,255,0.65); }
+.prose-dark p { color: rgba(255,255,255,0.65); }
+.prose-dark ul, .prose-dark ol { color: rgba(255,255,255,0.65); }
+.prose-dark li { color: rgba(255,255,255,0.65); }
+.prose-dark strong { color: rgba(255,255,255,0.85); }
+.prose-dark em { color: rgba(255,255,255,0.65); }
+.prose-dark a { color: rgba(34,211,238,0.85); }
+.prose-dark a:hover { color: rgba(34,211,238,1); }
+.prose-dark blockquote { border-left-color: rgba(255,255,255,0.12); color: rgba(255,255,255,0.5); }
+.prose-dark hr { border-color: rgba(255,255,255,0.08); }
+.prose-dark code { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.7); }
+.prose-dark pre { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
+.prose-dark pre code { background: transparent; color: rgba(255,255,255,0.7); }
+.prose-dark table { border-collapse: collapse; width: 100%; }
+.prose-dark thead tr { border-bottom: 1px solid rgba(255,255,255,0.10); }
+.prose-dark tbody tr { border-bottom: 1px solid rgba(255,255,255,0.06); }
+.prose-dark th { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.6); padding: 0.5rem 0.75rem; text-align: left; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+.prose-dark td { color: rgba(255,255,255,0.65); padding: 0.5rem 0.75rem; font-size: 0.875rem; }

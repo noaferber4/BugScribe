@@ -32,8 +32,8 @@ export function TemplateItem({
       onClick={onSelect}
       className={`group w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all ${
         isSelected
-          ? 'bg-indigo-50 text-indigo-700'
-          : 'text-gray-700 hover:bg-gray-50'
+          ? 'bg-cyan-500/10 text-cyan-400'
+          : 'text-white/60 hover:bg-white/[0.04] hover:text-white'
       }`}
     >
       <span className="text-base leading-none shrink-0">{icon}</span>
@@ -50,7 +50,7 @@ export function TemplateItem({
         <>
           {confirmingDelete ? (
             <div className="flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
-              <span className="text-xs text-red-600 font-medium mr-0.5">Delete?</span>
+              <span className="text-xs text-red-400 font-medium mr-0.5">Delete?</span>
               <button
                 onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
                 className="px-1.5 py-0.5 text-xs font-medium bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
@@ -59,7 +59,7 @@ export function TemplateItem({
               </button>
               <button
                 onClick={(e) => { e.stopPropagation(); setConfirmingDelete(false); }}
-                className="px-1.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors"
+                className="px-1.5 py-0.5 text-xs font-medium bg-white/[0.06] text-white/60 rounded hover:bg-white/[0.10] transition-colors"
               >
                 No
               </button>
@@ -69,7 +69,7 @@ export function TemplateItem({
               {onEdit && (
                 <button
                   onClick={(e) => { e.stopPropagation(); onEdit(); }}
-                  className="p-1 text-gray-400 hover:text-indigo-500 transition-colors"
+                  className="p-1 text-white/30 hover:text-cyan-400 transition-colors"
                   title="Edit template"
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -80,7 +80,7 @@ export function TemplateItem({
               {onDelete && (
                 <button
                   onClick={(e) => { e.stopPropagation(); setConfirmingDelete(true); }}
-                  className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                  className="p-1 text-white/30 hover:text-red-400 transition-colors"
                   title="Delete template"
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
