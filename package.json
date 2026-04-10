@@ -9,6 +9,7 @@
     "dev": "concurrently -n frontend,backend -c cyan,yellow \"npm run dev -w frontend\" \"npm run dev -w backend\""
   },
   "devDependencies": {
+    "@types/multer": "^2.1.0",
     "concurrently": "^9.2.1"
   },
   "dependencies": {

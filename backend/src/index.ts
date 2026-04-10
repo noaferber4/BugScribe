@@ -3,6 +3,7 @@ import cors from 'cors';
 import 'dotenv/config';
 import analyzeRouter from './routes/analyze.js';
 import translateRouter from './routes/translate.js';
+import transcribeRouter from './routes/transcribe.js';
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
@@ -12,6 +13,7 @@ app.use(express.json({ limit: '1mb' }));
 
 app.use('/api', analyzeRouter);
 app.use('/api', translateRouter);
+app.use('/api', transcribeRouter);
 
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });

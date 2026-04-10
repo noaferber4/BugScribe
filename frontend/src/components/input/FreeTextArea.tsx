@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import type { AnalyzeBlockedReason } from '../../App';
+import { useVoiceRecorder } from '../../hooks/useVoiceRecorder';
+import { MicButton } from './MicButton';
 
 export function FreeTextArea({
   value,
@@ -19,6 +21,12 @@ export function FreeTextArea({
   analyzeBlockedReason: AnalyzeBlockedReason;
 }) {
   const [attachedNames, setAttachedNames] = useState<string[]>([]);
+
+  const { status, elapsedSeconds, errorMessage, isSupported, startRecording, stopRecording, dismiss } =
+    useVoiceRecorder((transcript) => {
+      const current = value.trim();
+      onChange(current ? `${current}\n\n${transcript}` : transcript);
+    });
 
   function handleFiles(files: File[]) {
     const logs = files.filter((f) => /\.log$/i.test(f.name));
@@ -50,9 +58,18 @@ export function FreeTextArea({
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-white/70 mb-1.5">
-          Describe the Bug
-        </label>
+        <div className="flex items-center justify-between mb-1.5">
+          <label className="text-sm font-medium text-white/70">Describe the Bug</label>
+          <MicButton
+            status={status}
+            elapsedSeconds={elapsedSeconds}
+            isSupported={isSupported}
+            onStart={startRecording}
+            onStop={stopRecording}
+            onDismiss={dismiss}
+            errorMessage={errorMessage}
+          />
+        </div>
         <textarea
           value={value}
           onChange={(e) => onChange(e.target.value)}
