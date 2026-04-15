@@ -5,7 +5,7 @@ import './index.css'
 import App from './App.tsx'
 import { AuthPage } from './components/auth/AuthPage.tsx'
 import { LandingPage } from './pages/LandingPage.tsx'
-import { useAuth } from './hooks/useAuth.ts'
+import { AuthProvider, useAuth } from './context/AuthContext.tsx'
 
 function ProtectedRoute() {
   const { user, loading } = useAuth()
@@ -22,13 +22,15 @@ function AuthRoute({ mode }: { mode: 'login' | 'signup' }) {
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<AuthRoute mode="login" />} />
-        <Route path="/signup" element={<AuthRoute mode="signup" />} />
-        <Route path="/app" element={<ProtectedRoute />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<AuthRoute mode="login" />} />
+          <Route path="/signup" element={<AuthRoute mode="signup" />} />
+          <Route path="/app" element={<ProtectedRoute />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   </StrictMode>,
 )

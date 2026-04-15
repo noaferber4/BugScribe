@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { CopyButton } from './CopyButton';
+import { JiraModal } from './JiraModal';
 import { markdownToPlainText } from '../../lib/markdownToPlainText';
 import { translateReport } from '../../lib/api';
+import type { TemplateField, FormValues } from '../../types';
 
 // Remove markdown sections whose body is empty, whitespace-only, or "not specified"
 function removeEmptySections(markdown: string): string {
@@ -52,17 +54,22 @@ export function ReportPanel({
   error,
   onSave,
   onSaveReport,
+  fields = [],
+  formValues = {},
 }: {
   report: string;
   isLoading: boolean;
   error: string | null;
   onSave: (updated: string) => void;
   onSaveReport?: () => Promise<void>;
+  fields?: TemplateField[];
+  formValues?: FormValues;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedReport, setEditedReport] = useState('');
   const [isSaved, setIsSaved] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [jiraModalOpen, setJiraModalOpen] = useState(false);
 
   const [translatedReport, setTranslatedReport] = useState('');
   const [isTranslating, setIsTranslating] = useState(false);
@@ -169,7 +176,7 @@ export function ReportPanel({
   return (
     <div className="h-full flex flex-col">
       {/* Toolbar */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 shrink-0">
+      <div className="flex items-start justify-between px-4 py-3 border-b border-white/10 shrink-0 gap-2">
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold text-white/40 uppercase tracking-wider">
             Generated Report
@@ -186,7 +193,7 @@ export function ReportPanel({
         </div>
 
         {report && !isLoading && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center flex-wrap justify-end gap-2">
             {isEditing ? (
               <>
                 <button onClick={handleCancelEdit} className={toolbarBtn}>
@@ -237,11 +244,28 @@ export function ReportPanel({
                   </button>
                 )}
                 <CopyButton text={plainTextReport} />
+                <button
+                  onClick={() => setJiraModalOpen(true)}
+                  className={toolbarBtn}
+                  title="Create issue in Jira"
+                >
+                  <svg viewBox="0 0 32 32" className="h-3.5 w-3.5" fill="none">
+                    <path d="M15.814 1.977L8.35 9.44a1.09 1.09 0 000 1.54l3.317 3.317 5.515-5.515a1.09 1.09 0 011.54 0l5.515 5.515 3.317-3.317a1.09 1.09 0 000-1.54L20.07 1.977a2.96 2.96 0 00-4.256 0z" fill="currentColor" />
+                    <path d="M15.814 16.043L10.3 21.558a1.09 1.09 0 000 1.54l5.514 5.515a2.96 2.96 0 004.256 0l5.514-5.515a1.09 1.09 0 000-1.54l-5.514-5.515a1.09 1.09 0 00-1.256 0z" fill="currentColor" />
+                  </svg>
+                </button>
               </>
             )}
           </div>
         )}
       </div>
+      <JiraModal
+        isOpen={jiraModalOpen}
+        onClose={() => setJiraModalOpen(false)}
+        report={activeReport}
+        fields={fields}
+        formValues={formValues}
+      />
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-5 py-5" dir={showHebrew ? 'rtl' : 'ltr'}>

@@ -24,18 +24,26 @@ npm run build -w backend  # tsc to dist/
 npm start -w backend      # run compiled dist/index.js
 ```
 
-**Environment:** Create `backend/.env` with `ANTHROPIC_API_KEY=sk-ant-...` and `PORT=3002`. The Vite proxy in `frontend/vite.config.ts` points to `http://localhost:3002` — if you change the port, update both files.
+**Environment:** Create `backend/.env` with `ANTHROPIC_API_KEY=sk-ant-...`, `OPENAI_API_KEY=sk-...`, and `PORT=3002`. The Vite proxy in `frontend/vite.config.ts` points to `http://localhost:3002` — if you change the port, update both files.
 
 ## Architecture
 
 ### Data flow
-1. User fills a form (`StructuredForm`) or types free text (`FreeTextArea`) in `InputArea`
+
+**Bug report generation:**
+1. User fills a form (`StructuredForm`) or types/speaks free text (`FreeTextArea`) in `InputArea`
 2. `App.tsx` calls `useAnalyze.analyze()` → `lib/api.ts` POSTs to `/api/analyze`
 3. Vite proxies `/api` → Express backend on port 3002
 4. `routes/analyze.ts` validates the body, calls `buildPrompt()` then `streamReport()`
 5. `claude.ts` streams from Claude (`claude-opus-4-6`, adaptive thinking, prompt caching on system message) via SSE
 6. Frontend `lib/api.ts` reads the SSE stream with `ReadableStream`, appends deltas via `useAnalyze` state
 7. `ReportPanel` renders the accumulating markdown live, then filters empty sections in preview mode
+
+**Voice transcription (freetext mode only):**
+1. `useVoiceRecorder` hook manages browser `MediaRecorder` — negotiates MIME type (prefers `audio/webm;codecs=opus`, falls back through ogg → mp4)
+2. On stop, the audio Blob is POSTed to `/api/transcribe` as `multipart/form-data` via `frontend/src/lib/transcribe.ts`
+3. `routes/transcribe.ts` uses multer (memoryStorage, 25 MB limit) → OpenAI `whisper-1` → returns `{ text: string }`
+4. Transcription is appended to the freetext textarea with `\n\n` separator; existing text is preserved
 
 ### Key architectural decisions
 
@@ -51,11 +59,14 @@ npm start -w backend      # run compiled dist/index.js
 
 **Plain-text copy:** `ReportPanel` does not copy the raw markdown. It first runs `removeEmptySections()` (strips `##` sections whose body is blank/N/A/None), then `markdownToPlainText()` from `frontend/src/lib/markdownToPlainText.ts`, which converts headings to uppercase labels and strips markdown syntax. This produces Jira/Monday-ready output.
 
+**Voice transcription:** `useVoiceRecorder` (`frontend/src/hooks/useVoiceRecorder.ts`) owns the full recording state machine (`idle → requesting → recording → processing → error`). It calls `transcribeAudio()` from `frontend/src/lib/transcribe.ts` and delivers the result via an `onTranscript` callback. `MicButton` is purely presentational. The backend route (`routes/transcribe.ts`) uses `multer` + OpenAI SDK — Whisper 400s (no speech) are silently converted to `{ text: '' }` rather than surfaced as errors.
+
 **Mode:** Only `'structured'` and `'freetext'` are valid `InputMode` values. The `'both'` mode was removed. The backend `promptBuilder.ts` builds different user prompts depending on mode, but the system prompt stays constant.
 
 ### State ownership
 - `useTemplates` — all template state, localStorage persistence, selected template ID
 - `useAnalyze` — report string (streamed), loading, error; exposes `updateReport` for the edit-and-save flow
+- `useVoiceRecorder` — recording state machine, lives inside `FreeTextArea` (not lifted to `App.tsx`)
 - `App.tsx` — input mode, form values, free text, free text attachments, and the derived `missingFields` computation
 - `Sidebar` — owns `editingTemplate` state locally (which template the modal is currently editing)
 

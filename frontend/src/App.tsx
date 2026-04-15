@@ -207,6 +207,8 @@ export default function App() {
             error={error}
             onSave={updateReport}
             onSaveReport={report ? async () => { await saveReport(report, selectedTemplate.name); } : undefined}
+            fields={selectedTemplate.fields}
+            formValues={formValues}
           />
         ) : undefined
       }
