@@ -10,7 +10,7 @@ import { AuthProvider, useAuth } from './context/AuthContext.tsx'
 function ProtectedRoute() {
   const { user, loading } = useAuth()
   if (loading) return null
-  return user ? <App /> : <Navigate to="/login" replace />
+  return user ? <App /> : <Navigate to="/" replace />
 }
 
 function AuthRoute({ mode }: { mode: 'login' | 'signup' }) {

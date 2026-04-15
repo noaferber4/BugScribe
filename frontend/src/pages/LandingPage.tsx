@@ -254,9 +254,19 @@ function ReportCard() {
 }
 
 export function LandingPage() {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
   const navigate = useNavigate()
   const [authModal, setAuthModal] = useState<{ open: boolean; mode: 'login' | 'signup' } | null>(null)
+
+  // Redirect authenticated users to the app — handles three cases:
+  // 1. Returning user with a stored session who visits /
+  // 2. User who just signed in via the AuthModal (onAuthStateChange updates user)
+  // 3. User who was already logged in and navigates back to /
+  useEffect(() => {
+    if (!loading && user) {
+      navigate('/app', { replace: true })
+    }
+  }, [user, loading, navigate])
 
   const openAuth = (mode: 'login' | 'signup') => {
     if (user) {

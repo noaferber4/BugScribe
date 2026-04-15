@@ -1,11 +1,10 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { Eye, EyeOff } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 
 export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
   const { signIn, signUp } = useAuth()
-  const navigate = useNavigate()
   const [isSignUp, setIsSignUp] = useState(mode === 'signup')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -30,9 +29,10 @@ export function AuthPage({ mode }: { mode: 'login' | 'signup' }) {
       setError(error.message)
     } else if (isSignUp) {
       setMessage('Check your email to confirm your account.')
-    } else {
-      navigate('/app')
     }
+    // On successful sign-in: do NOT navigate imperatively here.
+    // onAuthStateChange in AuthProvider will fire, update user state, and
+    // AuthRoute will reactively redirect to /app once user is confirmed.
   }
 
   const inputClass =

@@ -31,6 +31,9 @@ export default function App() {
   const [freeText, setFreeText] = useState('');
   const [freeTextAttachments, setFreeTextAttachments] = useState('');
   const [lastAnalyzedKey, setLastAnalyzedKey] = useState<string | null>(null);
+  // Tracks the Supabase ID of the currently displayed report, if it's already saved.
+  // null = freshly generated, unsaved. non-null = loaded from saved list or just saved.
+  const [currentReportId, setCurrentReportId] = useState<string | null>(null);
 
 
   const currentInputKey = useMemo(
@@ -93,6 +96,7 @@ export default function App() {
   const handleAnalyze = useCallback(() => {
     if (!canAnalyze) return;
     setLastAnalyzedKey(currentInputKey);
+    setCurrentReportId(null); // new analysis = new unsaved report
 
     const combinedFreeText = freeTextAttachments
       ? `${freeText}\n\n${freeTextAttachments}`.trim()
@@ -121,8 +125,9 @@ export default function App() {
   );
 
   const handleLoadReport = useCallback(
-    (r: { content: string }) => {
+    (r: { id: string; content: string }) => {
       updateReport(r.content);
+      setCurrentReportId(r.id); // mark as already saved
       setCenterView({ type: 'form' });
     },
     [updateReport]
@@ -206,7 +211,11 @@ export default function App() {
             isLoading={isLoading}
             error={error}
             onSave={updateReport}
-            onSaveReport={report ? async () => { await saveReport(report, selectedTemplate.name); } : undefined}
+            onSaveReport={report ? async () => {
+              const saved = await saveReport(report, selectedTemplate.name);
+              if (saved) setCurrentReportId(saved.id);
+            } : undefined}
+            isAlreadySaved={currentReportId !== null}
             fields={selectedTemplate.fields}
             formValues={formValues}
           />

@@ -73,6 +73,8 @@ export function buildPrompt(req: AnalyzeRequest): PromptParts {
   lines.push('# [Bug Title — use the user\'s title verbatim if given, otherwise write a neutral descriptive title]', '');
   for (const field of req.fields) {
     if (field.type === 'file') continue;
+    // Skip the title field — it's already the H1 heading above, adding it as a ## section would duplicate it
+    if (field.id === 'title') continue;
     lines.push(`## ${field.label}`);
     lines.push('[content based on the input above, or "Not specified" if not provided]', '');
   }

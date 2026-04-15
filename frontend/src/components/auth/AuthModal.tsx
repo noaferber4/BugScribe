@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { Eye, EyeOff, X } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { Button } from '../ui/button'
@@ -15,7 +14,6 @@ interface AuthModalProps {
 
 export function AuthModal({ initialMode = 'login', onClose }: AuthModalProps) {
   const { signIn, signUp } = useAuth()
-  const navigate = useNavigate()
 
   const [isSignUp, setIsSignUp] = useState(initialMode === 'signup')
   const [email, setEmail] = useState('')
@@ -49,7 +47,7 @@ export function AuthModal({ initialMode = 'login', onClose }: AuthModalProps) {
       setMessage('Check your email to confirm your account.')
     } else {
       onClose()
-      navigate('/app')
+      // AuthRoute / LandingPage will react to the user state update from onAuthStateChange
     }
   }
 
