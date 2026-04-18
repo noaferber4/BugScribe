@@ -25,7 +25,12 @@ export interface PromptParts {
 }
 
 export function buildPrompt(req: AnalyzeRequest): PromptParts {
-  const lines: string[] = [`Template: **${req.templateName}**`, ''];
+  // Present the template name purely as categorisation metadata so the model
+  // never mistakes it for the bug title.
+  const lines: string[] = [
+    `[Report category: "${req.templateName}" — this is internal metadata for template selection only. Do NOT use this as the bug title under any circumstances.]`,
+    '',
+  ];
 
   if (req.mode === 'structured') {
     if (req.formValues && Object.keys(req.formValues).length > 0) {
@@ -70,7 +75,13 @@ export function buildPrompt(req: AnalyzeRequest): PromptParts {
 
   // Build dynamic output format from template fields
   lines.push('', '---', '', 'Required output format — output ONLY these sections, in this exact order. Do not add any other sections:', '');
-  lines.push('# [Bug Title — use the user\'s title verbatim if given, otherwise write a neutral descriptive title]', '');
+  lines.push(
+    '# [Bug Title — derive a concise, descriptive title from the bug content ONLY.' +
+    ' If the input contains a dedicated title field, use it verbatim.' +
+    ' If not, write a one-sentence summary of the actual bug (e.g. "Login page crashes when pressing ESC").' +
+    ' NEVER use the report category / template name as the title.]',
+    ''
+  );
   for (const field of req.fields) {
     if (field.type === 'file') continue;
     // Skip the title field — it's already the H1 heading above, adding it as a ## section would duplicate it

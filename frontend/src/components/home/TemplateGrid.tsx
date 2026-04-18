@@ -1,10 +1,63 @@
-import { Plus, ArrowRight, FileText, Clock } from 'lucide-react';
+import { ArrowRight, FileText, Clock, Sparkles } from 'lucide-react';
 import type { Template } from '../../types';
 import type { SavedReport } from '../../hooks/useReports';
 import { TemplateCard } from './TemplateCard';
 import { BUILTIN_TEMPLATES } from '../../constants/builtinTemplates';
 
 const BUILTIN_IDS = new Set(BUILTIN_TEMPLATES.map((t) => t.id));
+
+function CreateTemplateCard({
+  onClick,
+  animationDelay = 0,
+}: {
+  onClick: () => void;
+  animationDelay?: number;
+}) {
+  return (
+    <div
+      className="group relative bg-white/[0.02] border border-dashed border-white/[0.1] rounded-2xl p-6 cursor-pointer transition-all duration-300 ease-out hover:-translate-y-1 hover:border-cyan-500/30 hover:bg-white/[0.04] animate-fade-up"
+      style={{ animationDelay: `${animationDelay}ms` }}
+      onClick={onClick}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLElement).style.boxShadow = '0 12px 40px -8px rgba(6,182,212,0.14)';
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLElement).style.boxShadow = '';
+      }}
+    >
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-cyan-500/[0.05] via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+
+      {/* Icon */}
+      <div className="relative flex items-start justify-between mb-4">
+        <div className="h-10 w-10 rounded-xl border border-dashed border-white/[0.12] group-hover:border-cyan-500/30 bg-white/[0.03] group-hover:bg-cyan-500/[0.08] flex items-center justify-center transition-all duration-300 shrink-0">
+          <Sparkles className="h-4 w-4 text-white/25 group-hover:text-cyan-400 transition-colors duration-300" />
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="relative">
+        <p className="text-[15px] font-semibold text-white/55 group-hover:text-white mb-1.5 tracking-tight transition-colors duration-200">
+          Create Your Template
+        </p>
+        <p className="text-xs text-white/30 leading-relaxed line-clamp-2">
+          Build a custom bug report structure tailored to your team's workflow and requirements.
+        </p>
+      </div>
+
+      {/* Footer */}
+      <div className="relative flex items-center justify-between pt-4 mt-4 border-t border-white/[0.06]">
+        <span className="text-[11px] font-mono text-white/20 group-hover:text-white/30 transition-colors">
+          Fully customizable
+        </span>
+        <span className="flex items-center gap-1 text-[11px] font-medium text-cyan-400/80 opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-0 -translate-x-1">
+          Start building
+          <ArrowRight className="h-3 w-3" />
+        </span>
+      </div>
+    </div>
+  );
+}
 
 function formatDate(iso: string) {
   const d = new Date(iso);
@@ -134,7 +187,7 @@ export function TemplateGrid({
           </section>
         )}
 
-        {/* ─── Built-in Templates ─── */}
+        {/* ─── Templates ─── */}
         <section className="mb-8">
           <div className="flex items-center gap-3 mb-4">
             <span className="text-xs font-semibold text-white/40 uppercase tracking-widest">
@@ -142,7 +195,7 @@ export function TemplateGrid({
             </span>
             <div className="flex-1 h-px bg-white/[0.06]" />
           </div>
-          <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {builtinTemplates.map((t, i) => (
               <TemplateCard
                 key={t.id}
@@ -151,19 +204,20 @@ export function TemplateGrid({
                 animationDelay={280 + i * 55}
               />
             ))}
+            <CreateTemplateCard onClick={onCreateTemplate} animationDelay={390} />
           </div>
         </section>
 
-        {/* ─── Custom Templates ─── */}
+        {/* ─── My Templates ─── */}
         {customTemplates.length > 0 && (
-          <section className="mb-8 animate-fade-up" style={{ animationDelay: '560ms' }}>
+          <section className="mb-8 animate-fade-up" style={{ animationDelay: '480ms' }}>
             <div className="flex items-center gap-3 mb-4">
               <span className="text-xs font-semibold text-white/40 uppercase tracking-widest">
                 My Templates
               </span>
               <div className="flex-1 h-px bg-white/[0.06]" />
             </div>
-            <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {customTemplates.map((t, i) => (
                 <TemplateCard
                   key={t.id}
@@ -171,24 +225,12 @@ export function TemplateGrid({
                   onSelect={() => onSelectTemplate(t.id)}
                   onEdit={() => onEditTemplate(t)}
                   onDelete={() => onDeleteTemplate(t.id)}
-                  animationDelay={580 + i * 55}
+                  animationDelay={500 + i * 55}
                 />
               ))}
             </div>
           </section>
         )}
-
-        {/* ─── Create Template CTA ─── */}
-        <button
-          onClick={onCreateTemplate}
-          className="group w-full border border-dashed border-white/[0.08] hover:border-white/[0.18] rounded-2xl p-5 flex items-center justify-center gap-3 text-white/25 hover:text-white/50 hover:bg-white/[0.02] transition-all duration-200 animate-fade-up"
-          style={{ animationDelay: '600ms' }}
-        >
-          <div className="h-8 w-8 rounded-lg border border-dashed border-white/15 group-hover:border-white/30 flex items-center justify-center transition-colors">
-            <Plus className="h-4 w-4" />
-          </div>
-          <span className="text-sm font-medium">Create a custom template</span>
-        </button>
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Modal } from '../common/Modal';
+import { CustomSelect } from '../ui/select';
 import type { Template, TemplateField, FieldType } from '../../types';
 
 interface FieldDraft {
@@ -153,18 +154,18 @@ export function CreateTemplateModal({
                     placeholder="Field label"
                     className="flex-1 px-2 py-1.5 text-sm bg-white/[0.05] border border-white/10 text-white placeholder:text-white/40 rounded focus:outline-none focus:border-cyan-500/60 transition-colors"
                   />
-                  <select
+                  <CustomSelect
                     value={field.type}
-                    onChange={(e) => updateField(field.id, { type: e.target.value as FieldType })}
-                    className="px-2 py-1.5 text-sm bg-[#0a0f1e] border border-white/10 text-white/70 rounded focus:outline-none focus:border-cyan-500/60 transition-colors"
-                    style={{ colorScheme: 'dark' }}
-                  >
-                    <option value="text">Text</option>
-                    <option value="textarea">Textarea</option>
-                    <option value="select">Select</option>
-                    <option value="multi-select">Multi-select</option>
-                    <option value="file">File Upload</option>
-                  </select>
+                    onChange={(v) => v && updateField(field.id, { type: v as FieldType })}
+                    fullWidth={false}
+                    options={[
+                      { value: 'text', label: 'Text' },
+                      { value: 'textarea', label: 'Textarea' },
+                      { value: 'select', label: 'Select' },
+                      { value: 'multi-select', label: 'Multi-select' },
+                      { value: 'file', label: 'File Upload' },
+                    ]}
+                  />
                   <label className="flex items-center gap-1 text-xs text-white/40 shrink-0">
                     <input
                       type="checkbox"

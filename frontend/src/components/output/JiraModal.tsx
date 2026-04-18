@@ -1,10 +1,8 @@
 import { useEffect } from 'react';
 import { Modal } from '../common/Modal';
+import { CustomSelect } from '../ui/select';
 import { useJira } from '../../hooks/useJira';
 import type { TemplateField, FormValues } from '../../types';
-
-const selectClass =
-  'w-full px-3 py-2 text-sm bg-white/[0.06] border border-white/10 rounded-lg text-white/80 focus:outline-none focus:border-white/25 focus:bg-white/[0.08] disabled:opacity-50 disabled:cursor-not-allowed appearance-none';
 
 const inputClass =
   'w-full px-3 py-2 text-sm bg-white/[0.06] border border-white/10 rounded-lg text-white/80 placeholder-white/30 focus:outline-none focus:border-white/25 focus:bg-white/[0.08]';
@@ -117,18 +115,12 @@ export function JiraModal({
                 <Spinner /> Loading projects…
               </div>
             ) : (
-              <select
-                className={selectClass}
+              <CustomSelect
                 value={jira.selectedProjectId ?? ''}
-                onChange={(e) => e.target.value && jira.selectProject(e.target.value)}
-              >
-                <option value="" disabled>Select a project</option>
-                {jira.projects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} ({p.key})
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => v && jira.selectProject(v)}
+                placeholder="Select a project"
+                options={jira.projects.map((p) => ({ value: p.id, label: `${p.name} (${p.key})` }))}
+              />
             )}
           </div>
 
@@ -141,16 +133,12 @@ export function JiraModal({
                   <Spinner /> Loading issue types…
                 </div>
               ) : (
-                <select
-                  className={selectClass}
+                <CustomSelect
                   value={jira.selectedIssueTypeId ?? ''}
-                  onChange={(e) => e.target.value && jira.selectIssueType(e.target.value)}
-                >
-                  <option value="" disabled>Select issue type</option>
-                  {jira.issueTypes.map((t) => (
-                    <option key={t.id} value={t.id}>{t.name}</option>
-                  ))}
-                </select>
+                  onChange={(v) => v && jira.selectIssueType(v)}
+                  placeholder="Select issue type"
+                  options={jira.issueTypes.map((t) => ({ value: t.id, label: t.name }))}
+                />
               )}
             </div>
           )}
