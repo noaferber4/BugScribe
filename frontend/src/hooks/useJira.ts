@@ -122,11 +122,18 @@ export function useJira(
     setIsCreating(true);
     setError(null);
     try {
+      // Strip the leading H1 line from the description to avoid duplicating
+      // the title that was already extracted into the Jira Summary field.
+      const reportForDescription = report
+        .replace(/^#\s+.+(\r?\n)?/, '')
+        .replace(/^\s*\n/, '')
+        .trimStart();
+
       const issue = await createJiraIssue({
         projectId: selectedProjectId,
         issueTypeId: selectedIssueTypeId,
         summary,
-        report,
+        report: reportForDescription,
         fields,
         formValues,
       });
@@ -148,10 +155,18 @@ export function useJira(
     setError(null);
   }, []);
 
-  // Pre-fill summary when fields/formValues change (or when summary is empty)
+  // Pre-fill summary when the report or form values change (only when summary is empty)
   useEffect(() => {
     if (summary) return;
-    // Build a quick client-side summary for pre-fill (same logic as backend fallback)
+
+    // Primary: extract the first H1 heading from the generated report
+    const headingMatch = report.match(/^#\s+(.+)/m);
+    if (headingMatch) {
+      setSummary(headingMatch[1].trim().slice(0, 255));
+      return;
+    }
+
+    // Fallback: derive from form fields when no heading is present
     const titleField = fields.find(
       (f) => f.type !== 'file' && /^(title|summary|name)$/i.test(f.label.trim())
     );
@@ -172,7 +187,7 @@ export function useJira(
     }
     if (parts.length) setSummary(parts.join(' — ').slice(0, 255));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fields, formValues]);
+  }, [report, fields, formValues]);
 
   return {
     connected,

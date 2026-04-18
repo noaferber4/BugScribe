@@ -119,19 +119,17 @@ export function TemplateBuilder({
   onCancel: () => void;
 }) {
   const [name, setName] = useState('');
-  const [description, setDescription] = useState('');
-  const [fieldDrafts, setFieldDrafts] = useState<FieldDraft[]>([newFieldDraft()]);
+  const [fieldDrafts, setFieldDrafts] = useState<FieldDraft[]>([]);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (editingTemplate) {
       setName(editingTemplate.name);
-      setDescription(editingTemplate.description);
-      setFieldDrafts(templateToFieldDrafts(editingTemplate.fields));
+      // Exclude the auto-injected bug_description field from the editable list
+      setFieldDrafts(templateToFieldDrafts(editingTemplate.fields.filter((f) => f.id !== 'bug_description')));
     } else {
       setName('');
-      setDescription('');
-      setFieldDrafts([newFieldDraft()]);
+      setFieldDrafts([]);
     }
     setError('');
   }, [editingTemplate]);
@@ -146,11 +144,10 @@ export function TemplateBuilder({
 
   function handleSave() {
     if (!name.trim()) { setError('Template name is required.'); return; }
-    if (fieldDrafts.length === 0) { setError('Add at least one field.'); return; }
-    if (fieldDrafts.some((f) => !f.label.trim())) { setError('All fields must have a label.'); return; }
+    const filledDrafts = fieldDrafts.filter((f) => f.label.trim());
 
-    const usedIds = new Set<string>();
-    const fields: TemplateField[] = fieldDrafts.map((f, i) => {
+    const usedIds = new Set<string>(['bug_description']);
+    const customFields: TemplateField[] = filledDrafts.map((f, i) => {
       let base = f.label.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
       if (!base) base = `field_${i}`;
       let id = base;
@@ -170,7 +167,14 @@ export function TemplateBuilder({
       };
     });
 
-    onSave({ name: name.trim(), description: description.trim(), fields });
+    const bugDescriptionField: TemplateField = {
+      id: 'bug_description',
+      label: 'Bug Description',
+      type: 'textarea',
+      required: true,
+    };
+
+    onSave({ name: name.trim(), description: '', fields: [bugDescriptionField, ...customFields] });
   }
 
   const isEditing = !!editingTemplate;
@@ -217,17 +221,6 @@ export function TemplateBuilder({
               onChange={(e) => setName(e.target.value)}
               className={inputClass}
               placeholder="e.g., Security Issue"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-white/70 mb-1">Description</label>
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className={inputClass}
-              placeholder="Short description of this template"
             />
           </div>
 

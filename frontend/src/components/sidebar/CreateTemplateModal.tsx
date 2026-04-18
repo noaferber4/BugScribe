@@ -46,7 +46,7 @@ export function CreateTemplateModal({
 }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [fieldDrafts, setFieldDrafts] = useState<FieldDraft[]>([newFieldDraft()]);
+  const [fieldDrafts, setFieldDrafts] = useState<FieldDraft[]>([]);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -58,7 +58,7 @@ export function CreateTemplateModal({
     } else if (isOpen && !editingTemplate) {
       setName('');
       setDescription('');
-      setFieldDrafts([newFieldDraft()]);
+      setFieldDrafts([]);
       setError('');
     }
   }, [isOpen, editingTemplate]);
@@ -73,10 +73,10 @@ export function CreateTemplateModal({
 
   function handleSave() {
     if (!name.trim()) { setError('Template name is required.'); return; }
-    if (fieldDrafts.length === 0) { setError('Add at least one field.'); return; }
-    if (fieldDrafts.some((f) => !f.label.trim())) { setError('All fields must have a label.'); return; }
+    if (!description.trim()) { setError('Bug description is required.'); return; }
+    const filledDrafts = fieldDrafts.filter((f) => f.label.trim());
 
-    const fields: TemplateField[] = fieldDrafts.map((f) => ({
+    const fields: TemplateField[] = filledDrafts.map((f) => ({
       id: f.label.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, ''),
       label: f.label.trim(),
       type: f.type,
@@ -119,13 +119,13 @@ export function CreateTemplateModal({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-white/70 mb-1">Description</label>
+          <label className="block text-sm font-medium text-white/70 mb-1">Bug Description *</label>
           <input
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             className={inputClass}
-            placeholder="Short description of this template"
+            placeholder="e.g., Describe the bug that occurred"
           />
         </div>
 

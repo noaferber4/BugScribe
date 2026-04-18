@@ -270,13 +270,15 @@ export function ReportPanel({
           </div>
         )}
       </div>
-      <JiraModal
-        isOpen={jiraModalOpen}
-        onClose={() => setJiraModalOpen(false)}
-        report={activeReport}
-        fields={fields}
-        formValues={formValues}
-      />
+      {jiraModalOpen && (
+        <JiraModal
+          isOpen={jiraModalOpen}
+          onClose={() => setJiraModalOpen(false)}
+          report={activeReport}
+          fields={fields}
+          formValues={formValues}
+        />
+      )}
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-5 py-5" dir={showHebrew ? 'rtl' : 'ltr'}>

@@ -22,7 +22,7 @@ type CenterView =
 export default function App() {
   const { allTemplates, selectedTemplate, setSelectedTemplate, addCustomTemplate, updateCustomTemplate, deleteCustomTemplate } =
     useTemplates();
-  const { report, isLoading, error, analyze, updateReport } = useAnalyze();
+  const { report, isLoading, error, analyze, updateReport, clearReport } = useAnalyze();
   const { savedReports, saveReport, deleteReport } = useReports();
 
   const [centerView, setCenterView] = useState<CenterView>({ type: 'home' });
@@ -79,9 +79,11 @@ export default function App() {
       setFreeText('');
       setFreeTextAttachments('');
       setLastAnalyzedKey(null);
+      setCurrentReportId(null);
+      clearReport();
       setCenterView({ type: 'form' });
     },
-    [setSelectedTemplate]
+    [setSelectedTemplate, clearReport]
   );
 
   const handleFormChange = useCallback((fieldId: string, value: string) => {
@@ -119,9 +121,11 @@ export default function App() {
       } else {
         addCustomTemplate(draft);
       }
+      clearReport();
+      setCurrentReportId(null);
       setCenterView({ type: 'home' });
     },
-    [centerView, addCustomTemplate, updateCustomTemplate]
+    [centerView, addCustomTemplate, updateCustomTemplate, clearReport]
   );
 
   const handleLoadReport = useCallback(
@@ -187,7 +191,7 @@ export default function App() {
         <TemplateBuilder
           editingTemplate={editingTemplate}
           onSave={handleTemplateSave}
-          onCancel={() => setCenterView({ type: 'home' })}
+          onCancel={() => { clearReport(); setCurrentReportId(null); setCenterView({ type: 'home' }); }}
         />
       );
       break;
@@ -198,9 +202,9 @@ export default function App() {
       sidebar={
         <Sidebar
           centerViewType={centerView.type}
-          onNavHome={() => setCenterView({ type: 'home' })}
-          onNavCreateTemplate={() => setCenterView({ type: 'template-builder', mode: 'create' })}
-          onNavSavedBugs={() => setCenterView({ type: 'saved-bugs' })}
+          onNavHome={() => { clearReport(); setCurrentReportId(null); setCenterView({ type: 'home' }); }}
+          onNavCreateTemplate={() => { clearReport(); setCurrentReportId(null); setCenterView({ type: 'template-builder', mode: 'create' }); }}
+          onNavSavedBugs={() => { clearReport(); setCurrentReportId(null); setCenterView({ type: 'saved-bugs' }); }}
         />
       }
       main={mainContent}
